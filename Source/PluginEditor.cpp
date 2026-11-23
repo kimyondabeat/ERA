@@ -11,14 +11,14 @@ void EraLookAndFeel::refreshColours()
     setColour (juce::PopupMenu::textColourId, text);
     setColour (juce::PopupMenu::headerTextColourId, lime);
     setColour (juce::PopupMenu::highlightedBackgroundColourId, lime);
-    setColour (juce::PopupMenu::highlightedTextColourId, bg);
-    setColour (juce::TextEditor::textColourId, text);
+    setColour (juce::PopupMenu::highlightedTextColourId, onAccent);
+    setColour (juce::TextEditor::textColourId, juce::Colour (0xffe9ebf0)); // the field is always a dark screen
     setColour (juce::TextEditor::highlightColourId, lime.withAlpha (0.35f));
     setColour (juce::CaretComponent::caretColourId, lime);
     setColour (juce::ListBox::backgroundColourId, juce::Colours::transparentBlack);
     setColour (juce::ScrollBar::thumbColourId, lime.withAlpha (0.5f));
     setColour (juce::TextButton::textColourOffId, text);
-    setColour (juce::TextButton::textColourOnId, bg);
+    setColour (juce::TextButton::textColourOnId, onAccent);
 }
 
 void EraLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int w, int h, float pos, float start, float end, juce::Slider& s)
@@ -52,7 +52,7 @@ void EraLookAndFeel::drawLinearSlider (juce::Graphics& g, int x, int y, int w, i
         g.fillRoundedRectangle (cap.translated (0.0f, 2.0f), 4.0f);
         g.setColour (master ? lime : off);
         g.fillRoundedRectangle (cap, 4.0f);
-        g.setColour (master ? lime.brighter (0.5f) : juce::Colour (0xff555b68));
+        g.setColour (master ? lime.brighter (0.5f) : off.brighter (0.3f));
         g.fillRect (cap.withHeight (2.0f));
         return;
     }
@@ -86,7 +86,7 @@ void EraLookAndFeel::drawButtonBackground (juce::Graphics& g, juce::Button& b, c
     }
     if (chip && ! on)
     {
-        g.setColour (over ? dim : juce::Colour (0xff2c303a));
+        g.setColour (b.getProperties()["lcd"] ? lime.withAlpha (over ? 0.9f : 0.45f) : (over ? dim : chipEdge));
         g.drawRoundedRectangle (r.reduced (1.0f), radius, 2.0f);
         return;
     }
@@ -116,7 +116,7 @@ void EraLookAndFeel::drawButtonText (juce::Graphics& g, juce::TextButton& b, boo
         if (down) r.translate (0.0f, 2.0f);
     }
     const bool on = b.getToggleState();
-    auto c = on ? bg : (b.getProperties()["flat"] ? dim : text);
+    auto c = on ? onAccent : (b.getProperties()["lcd"] ? lime : (b.getProperties()["flat"] ? dim : text));
     if (! b.isEnabled()) c = c.withAlpha (0.4f);
     g.setColour (c);
     const float size = b.getProperties().contains ("fontSize") ? (float) b.getProperties()["fontSize"] : 11.0f;
@@ -242,7 +242,7 @@ MainView::MainView (EraProcessor& p, std::function<void (float)> scaleFn)
     o.filenameSuffix = ".settings";
     o.osxLibrarySubFolder = "Application Support";
     settings = std::make_unique<juce::PropertiesFile> (o);
-    applyAccent (settings->getIntValue ("accent", 0));
+    applyTheme (settings->getIntValue ("theme", 0));
     for (auto& f : juce::StringArray::fromLines (settings->getValue ("favourites")))
         if (f.isNotEmpty()) favourites.insert (f);
 
@@ -258,6 +258,7 @@ MainView::MainView (EraProcessor& p, std::function<void (float)> scaleFn)
     for (auto* b : { &prevSound, &nextSound })
     {
         b->getProperties().set ("chip", true);
+        b->getProperties().set ("lcd", true);
         b->getProperties().set ("fontSize", 14.0f);
         addAndMakeVisible (b);
     }
@@ -382,9 +383,9 @@ void MainView::showSettings()
     for (int pct : { 60, 70, 80, 90, 100, 110, 120 })
         sizes.addItem (pct, juce::String (pct) + " %", true, std::abs (current * 100.0f - (float) pct) < 1.0f);
     juce::PopupMenu colours;
-    const int currentAccent = settings->getIntValue ("accent", 0);
-    for (int i = 0; i < numAccents; ++i)
-        colours.addItem (1000 + i, accents[i].name, true, i == currentAccent);
+    const int currentTheme = settings->getIntValue ("theme", 0);
+    for (int i = 0; i < numThemes; ++i)
+        colours.addItem (1000 + i, themes[i].name, true, i == currentTheme);
     m.addSectionHeader ("ERA v1.0  -  by kimyondabeat");
     m.addSubMenu ("Interface size", sizes);
     m.addSubMenu ("Interface colour", colours);
@@ -395,11 +396,13 @@ void MainView::showSettings()
                          if (r <= 0) return;
                          if (r >= 1000)
                          {
-                             settings->setValue ("accent", r - 1000);
+                             settings->setValue ("theme", r - 1000);
                              settings->saveIfNeeded();
-                             applyAccent (r - 1000);
+                             applyTheme (r - 1000);
                              if (auto* l = dynamic_cast<EraLookAndFeel*> (&getLookAndFeel())) l->refreshColours();
+                             home.library.refreshList();
                              repaintEverything();
+                             if (auto* ed = getParentComponent()) ed->repaint();
                              return;
                          }
                          settings->setValue ("uiScale", r / 100.0);
@@ -480,7 +483,7 @@ void MainView::paint (juce::Graphics& g)
     auto nav = juce::Rectangle<float> (708, 22, 260, 46);
     g.setColour (panel);
     g.fillRoundedRectangle (nav, 11.0f);
-    g.setColour (juce::Colour (0xff262a34));
+    g.setColour (panelEdge);
     g.drawRoundedRectangle (nav.reduced (1.0f), 11.0f, 2.0f);
     const char* names[] = { "TRIG", "MIDI", "PWR" };
     const float levels[] = { trigLed, midiLed, 1.0f };

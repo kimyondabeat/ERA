@@ -48,7 +48,7 @@ void CategoryList::paint (juce::Graphics& g)
         }
         const juce::String label = cat < 0 ? juce::String ("Favorites") : juce::String (categories[(size_t) cat].label);
         const int count = cat < 0 ? main.countFavourites() : (int) Library::get().inCategory (cat).size();
-        g.setColour (sel ? bg : text);
+        g.setColour (sel ? onAccent : text);
         g.setFont (sans (12.5f));
         auto t = r.reduced (10.0f, 0.0f);
         if (cat < 0)
@@ -59,7 +59,7 @@ void CategoryList::paint (juce::Graphics& g)
             t.removeFromLeft (6.0f);
         }
         g.drawText (label, t, juce::Justification::centredLeft);
-        g.setColour (sel ? bg.withAlpha (0.7f) : faint);
+        g.setColour (sel ? onAccent.withAlpha (0.7f) : faint);
         g.setFont (mono (10.0f));
         g.drawText (juce::String (count), t, juce::Justification::centredRight);
     }
@@ -319,7 +319,7 @@ void SampleEditor::paint (juce::Graphics& g)
     auto he = juce::Rectangle<float> (ex - 6.0f, r.getBottom() - 12.0f, 12.0f, 12.0f);
     g.fillRoundedRectangle (hs, 2.0f);
     g.fillRoundedRectangle (he, 2.0f);
-    g.setColour (bg);
+    g.setColour (onAccent);
     g.setFont (sans (8.5f));
     g.drawText ("S", hs, juce::Justification::centred);
     g.drawText ("E", he, juce::Justification::centred);
@@ -494,13 +494,13 @@ void PadControl::paint (juce::Graphics& g)
     {
         g.setColour (on ? bg.interpolatedWith (lime, 0.07f) : panel2);
         g.fillRoundedRectangle (r, 9.0f);
-        g.setColour (on ? lime : juce::Colour (0xff2c303a));
+        g.setColour (on ? lime : chipEdge);
         g.drawRoundedRectangle (r.reduced (1.0f), 9.0f, 2.0f);
         auto in = r.reduced (10.0f, 0.0f);
         auto badge = in.removeFromLeft (24.0f).withSizeKeepingCentre (24.0f, 24.0f);
         g.setColour (on ? lime : knob);
         g.fillRoundedRectangle (badge, 6.0f);
-        g.setColour (on ? bg : text);
+        g.setColour (on ? onAccent : text);
         g.setFont (sans (12.0f));
         g.drawText (tag, badge, juce::Justification::centred);
         in.removeFromLeft (10.0f);
@@ -603,7 +603,7 @@ void PadGrid::drawShape (juce::Graphics& g, int pad, juce::Rectangle<float> area
     const auto c = area.getCentre();
     const juce::Colour fill = sel ? lime : knob.interpolatedWith (lime, fl * 0.6f);
     const juce::Colour sh = sel ? limeDark : shadow;
-    const juce::Colour inner = (sel ? bg : juce::Colour (0xff1a1d24));
+    const juce::Colour innerC = (sel ? onAccent.interpolatedWith (limeDark, 0.3f) : inner);
     const float glow = sel ? 0.35f + 0.4f * fl : 0.5f * fl;
 
     auto glowAround = [&] (const juce::Path& p)
@@ -628,7 +628,7 @@ void PadGrid::drawShape (juce::Graphics& g, int pad, juce::Rectangle<float> area
         {
             p.addEllipse (juce::Rectangle<float> (120, 120).withCentre (c));
             body (p);
-            g.setColour (inner.withAlpha (0.35f));
+            g.setColour (innerC.withAlpha (0.35f));
             g.drawEllipse (juce::Rectangle<float> (44, 44).withCentre (c), 3.0f);
             break;
         }
@@ -636,9 +636,9 @@ void PadGrid::drawShape (juce::Graphics& g, int pad, juce::Rectangle<float> area
         {
             p.addEllipse (juce::Rectangle<float> (100, 100).withCentre (c));
             body (p);
-            g.setColour (inner.withAlpha (0.27f));
+            g.setColour (innerC.withAlpha (0.27f));
             g.drawEllipse (juce::Rectangle<float> (84, 84).withCentre (c), 8.0f);
-            g.setColour (inner.withAlpha (0.4f));
+            g.setColour (innerC.withAlpha (0.4f));
             for (int i = -1; i <= 1; ++i)
                 g.fillRect (juce::Rectangle<float> (66, 2).withCentre (c.translated (0.0f, (float) i * 10.0f)));
             break;
@@ -672,7 +672,7 @@ void PadGrid::drawShape (juce::Graphics& g, int pad, juce::Rectangle<float> area
             body (p);
             g.saveState();
             g.reduceClipRegion (p);
-            g.setColour (inner.withAlpha (0.27f));
+            g.setColour (innerC.withAlpha (0.27f));
             for (float y = r.getY() + 9.0f; y < r.getBottom(); y += 11.0f)
                 g.fillRect (r.getX(), y, r.getWidth(), 2.0f);
             g.restoreState();
@@ -683,7 +683,7 @@ void PadGrid::drawShape (juce::Graphics& g, int pad, juce::Rectangle<float> area
             p.addRoundedRectangle (juce::Rectangle<float> (74, 74).withCentre ({ 0, 0 }), 14.0f);
             p.applyTransform (juce::AffineTransform::rotation (juce::MathConstants<float>::pi * 0.25f).translated (c));
             body (p);
-            g.setColour (inner.withAlpha (0.33f));
+            g.setColour (innerC.withAlpha (0.33f));
             g.fillEllipse (juce::Rectangle<float> (18, 18).withCentre (c));
             break;
         }
@@ -693,7 +693,7 @@ void PadGrid::drawShape (juce::Graphics& g, int pad, juce::Rectangle<float> area
             a.addEllipse (juce::Rectangle<float> (70, 70).withCentre (c.translated (-21.0f, -11.0f)));
             b.addEllipse (juce::Rectangle<float> (70, 70).withCentre (c.translated (21.0f, 11.0f)));
             body (a);
-            g.setColour (inner);
+            g.setColour (innerC);
             g.fillPath (b, juce::AffineTransform::translation (-4.0f, 0.0f));
             body (b);
             break;
@@ -706,18 +706,18 @@ void PadGrid::drawShape (juce::Graphics& g, int pad, juce::Rectangle<float> area
             glowAround (sp);
             g.setColour (sh);
             g.fillPath (sp, juce::AffineTransform::translation (0.0f, 6.0f));
-            g.setColour (sel ? limeDark : juce::Colour (0xff1e2129).interpolatedWith (lime, fl * 0.4f));
+            g.setColour (sel ? limeDark : knob.darker (0.25f).interpolatedWith (lime, fl * 0.4f));
             g.fillPath (sp);
             g.saveState();
             g.reduceClipRegion (sp);
-            g.setColour (inner.withAlpha (0.2f));
+            g.setColour (innerC.withAlpha (0.2f));
             for (float x = shell.getX() - 60.0f; x < shell.getRight(); x += 18.0f)
                 g.drawLine (x, shell.getBottom(), x + 34.0f, shell.getY(), 2.0f);
             g.restoreState();
             auto head = juce::Rectangle<float> (104, 30).withCentre ({ c.x, shell.getY() });
             g.setColour (fill);
             g.fillEllipse (head);
-            g.setColour (inner.withAlpha (0.27f));
+            g.setColour (innerC.withAlpha (0.27f));
             g.drawEllipse (head.reduced (3.0f), 4.0f);
             break;
         }

@@ -101,7 +101,7 @@ void MixPage::paint (juce::Graphics& g)
         auto r = strip (i).toFloat();
         g.setColour (master ? bg.interpolatedWith (lime, 0.07f) : panel2);
         g.fillRoundedRectangle (r, 12.0f);
-        g.setColour (master ? lime.withAlpha (0.4f) : juce::Colour (0xff262a34));
+        g.setColour (master ? lime.withAlpha (0.4f) : panelEdge);
         g.drawRoundedRectangle (r.reduced (1.0f), 12.0f, 2.0f);
 
         auto in = r.reduced (6.0f, 12.0f);

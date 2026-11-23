@@ -216,14 +216,15 @@ int main()
         setP (p, EraProcessor::fxPrefix (1) + "dlyOn", 1.0f);
         view->showPage (2);
         shot ("fx");
-        for (int a = 1; a < Theme::numAccents; ++a)
+        for (int a = 1; a < Theme::numThemes; ++a)
         {
-            Theme::applyAccent (a);
-            view->showPage (a == 2 ? 1 : 0);
+            Theme::applyTheme (a);
+            view->showPage (0);
             view->repaintEverything();
-            shot ("accent_" + juce::String (Theme::accents[a].name));
+            shot ("accent_" + juce::String (a));
+            if (a == 3) { view->showPage (1); shot ("pink_mix"); view->showPage (2); shot ("pink_fx"); }
         }
-        Theme::applyAccent (0);
+        Theme::applyTheme (0);
     }
 
     std::cout << (failures == 0 ? "ALL TESTS PASSED" : juce::String (failures) + " FAILURES") << std::endl;

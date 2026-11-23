@@ -36,4 +36,4 @@ FX
 
 SETTINGS
 - Interface size (60% to 120%).
-- Interface colour: Lime, Orange, Ice, Pink.
+- Interface colour: Lime, Ice Blue (black & white), Yellow (black & grey), Pink (grey & white).

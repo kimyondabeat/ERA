@@ -4,40 +4,47 @@
 
 namespace Theme
 {
-    const juce::Colour bg       { 0xff14161c };
-    const juce::Colour rail     { 0xff0f1116 };
-    const juce::Colour panel    { 0xff181b22 };
-    const juce::Colour panelEdge{ 0xff232731 };
-    const juce::Colour panel2   { 0xff1f232b };
-    const juce::Colour line     { 0xff2a2e38 };
-    const juce::Colour knob     { 0xff252933 };
-    const juce::Colour shadow   { 0xff0d0f13 };
-    const juce::Colour lcd      { 0xff0b0c0f };
-    const juce::Colour lcdEdge  { 0xff242833 };
-    const juce::Colour text     { 0xffe9ebf0 };
-    const juce::Colour dim      { 0xff9aa0ad };
-    const juce::Colour faint    { 0xff7c8290 };
-    const juce::Colour off      { 0xff3a3f4b };
-    // The accent colour (Settings > Interface colour). Named "lime" after the default.
-    inline juce::Colour lime     { 0xffc8f04a };
-    inline juce::Colour limeDark { 0xff8fae2c };
+    // Every colour of the interface comes from the selected theme (Settings > Interface colour).
+    // The accent is still called "lime" after the default theme.
+    inline juce::Colour bg, rail, panel, panelEdge, panel2, line, knob, shadow, lcd, lcdEdge,
+                        text, dim, faint, off, lime, limeDark, onAccent, chipEdge, inner;
+    const juce::Colour amber { 0xffffb347 };
+    const juce::Colour red   { 0xffff5a4a };
 
-    struct Accent { const char* name; juce::uint32 main, dark; };
-    constexpr int numAccents = 4;
-    inline const Accent accents[numAccents] = {
-        { "Lime",   0xffc8f04a, 0xff8fae2c },
-        { "Orange", 0xffff8a3d, 0xffb85a1c },
-        { "Ice",    0xff5cd6ff, 0xff2f8fb3 },
-        { "Pink",   0xffff5fae, 0xffb83878 },
-    };
-    inline void applyAccent (int i)
+    struct Palette
     {
-        const auto& a = accents[juce::jlimit (0, numAccents - 1, i)];
-        lime = juce::Colour (a.main);
-        limeDark = juce::Colour (a.dark);
+        const char* name;
+        juce::uint32 bg, rail, panel, panelEdge, panel2, line, knob, shadow, lcd, lcdEdge,
+                     text, dim, faint, off, accent, accentDark, onAccent, chipEdge, inner;
+    };
+    constexpr int numThemes = 4;
+    inline const Palette themes[numThemes] = {
+        { "Lime",
+          0xff14161c, 0xff0f1116, 0xff181b22, 0xff232731, 0xff1f232b, 0xff2a2e38, 0xff252933, 0xff0d0f13, 0xff0b0c0f, 0xff242833,
+          0xffe9ebf0, 0xff9aa0ad, 0xff7c8290, 0xff3a3f4b, 0xffc8f04a, 0xff8fae2c, 0xff14161c, 0xff2c303a, 0xff1a1d24 },
+        { "Ice Blue - Black & White",
+          0xff0a0a0b, 0xff000000, 0xff141416, 0xff242428, 0xff1c1c1f, 0xff2b2b30, 0xff232327, 0xff000000, 0xff050506, 0xff2b2b30,
+          0xffffffff, 0xffb8b8bf, 0xff8a8a92, 0xff3c3c42, 0xff7fdcff, 0xff3b9cc4, 0xff04141b, 0xff34343a, 0xff121214 },
+        { "Yellow - Black & Grey",
+          0xff111111, 0xff0a0a0a, 0xff1f1f1f, 0xff2f2f2f, 0xff292929, 0xff393939, 0xff333333, 0xff080808, 0xff0b0b0b, 0xff353535,
+          0xfff2f2f2, 0xffababab, 0xff8a8a8a, 0xff4a4a4a, 0xffffd23f, 0xffb8921a, 0xff1a1400, 0xff444444, 0xff242424 },
+        { "Pink - Grey & White",
+          0xffd4d4d8, 0xffbdbdc2, 0xfff7f7f8, 0xffcacace, 0xffececef, 0xffd2d2d7, 0xffd9d9de, 0xffb3b3ba, 0xff2a2a30, 0xffa6a6ad,
+          0xff1d1d22, 0xff52525a, 0xff66666e, 0xffc2c2c8, 0xffff4f9a, 0xffc22f6f, 0xffffffff, 0xffbdbdc3, 0xffc8c8ce },
+    };
+
+    inline void applyTheme (int index)
+    {
+        const auto& p = themes[juce::jlimit (0, numThemes - 1, index)];
+        bg = juce::Colour (p.bg); rail = juce::Colour (p.rail); panel = juce::Colour (p.panel); panelEdge = juce::Colour (p.panelEdge);
+        panel2 = juce::Colour (p.panel2); line = juce::Colour (p.line); knob = juce::Colour (p.knob); shadow = juce::Colour (p.shadow);
+        lcd = juce::Colour (p.lcd); lcdEdge = juce::Colour (p.lcdEdge); text = juce::Colour (p.text); dim = juce::Colour (p.dim);
+        faint = juce::Colour (p.faint); off = juce::Colour (p.off); lime = juce::Colour (p.accent); limeDark = juce::Colour (p.accentDark);
+        onAccent = juce::Colour (p.onAccent); chipEdge = juce::Colour (p.chipEdge); inner = juce::Colour (p.inner);
     }
-    const juce::Colour amber    { 0xffffb347 };
-    const juce::Colour red      { 0xffff5a4a };
+
+    // so the colours are valid before any settings are read
+    inline const bool themeReady = [] { applyTheme (0); return true; }();
 
     inline juce::Typeface::Ptr typeface (const char* data, int size)
     {
