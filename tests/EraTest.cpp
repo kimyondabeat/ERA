@@ -222,7 +222,7 @@ int main()
             view->showPage (0);
             view->repaintEverything();
             shot ("accent_" + juce::String (a));
-            if (a == 3) { view->showPage (1); shot ("pink_mix"); view->showPage (2); shot ("pink_fx"); }
+            if (a == 1) { view->showPage (1); shot ("ice_mix"); view->showPage (2); shot ("ice_fx"); }
         }
         Theme::applyTheme (0);
     }

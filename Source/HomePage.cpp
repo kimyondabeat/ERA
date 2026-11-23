@@ -107,6 +107,12 @@ LibraryPanel::LibraryPanel (MainView& m) : main (m)
         addAndMakeVisible (b);
 }
 
+void LibraryPanel::refreshColours()
+{
+    search.setTextToShowWhenEmpty ("Search sounds...", faint);
+    search.applyColourToAllText (getLookAndFeel().findColour (juce::TextEditor::textColourId));
+}
+
 void LibraryPanel::paint (juce::Graphics& g)
 {
     panelBox (g, getLocalBounds().toFloat(), "SAMPLE LIBRARY");

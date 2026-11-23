@@ -12,7 +12,7 @@ void EraLookAndFeel::refreshColours()
     setColour (juce::PopupMenu::headerTextColourId, lime);
     setColour (juce::PopupMenu::highlightedBackgroundColourId, lime);
     setColour (juce::PopupMenu::highlightedTextColourId, onAccent);
-    setColour (juce::TextEditor::textColourId, juce::Colour (0xffe9ebf0)); // the field is always a dark screen
+    setColour (juce::TextEditor::textColourId, lcd.getPerceivedBrightness() > 0.5f ? juce::Colour (0xff0a0a0b) : juce::Colour (0xffe9ebf0)); // the field is a screen
     setColour (juce::TextEditor::highlightColourId, lime.withAlpha (0.35f));
     setColour (juce::CaretComponent::caretColourId, lime);
     setColour (juce::ListBox::backgroundColourId, juce::Colours::transparentBlack);
@@ -400,6 +400,7 @@ void MainView::showSettings()
                              settings->saveIfNeeded();
                              applyTheme (r - 1000);
                              if (auto* l = dynamic_cast<EraLookAndFeel*> (&getLookAndFeel())) l->refreshColours();
+                             home.library.refreshColours();
                              home.library.refreshList();
                              repaintEverything();
                              if (auto* ed = getParentComponent()) ed->repaint();

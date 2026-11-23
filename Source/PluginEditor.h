@@ -93,6 +93,7 @@ public:
     void resized() override;
     void refreshList();
     void updateButtons();
+    void refreshColours();
 private:
     int getNumRows() override { return (int) shown.size(); }
     void paintListBoxItem (int row, juce::Graphics&, int w, int h, bool selected) override;
