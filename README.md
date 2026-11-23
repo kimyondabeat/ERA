@@ -7,8 +7,8 @@ Raboday drum plugin by kimyondabeat. VST3 + app (Windows, Mac), AU (Mac).
 
 ## Sounds
 Every file in `Kit/` is built into the plugin. Names: `<category>__<NN>__<Name>.flac`
-(categories: `kick snare rim percs vox fx clap tom`). The current kit is a synthesized
-placeholder (`tools/make_placeholder_kit.py`); replace the files with your own pack and push.
+(categories: `kick snare rim percs vox fx clap tom`). The first file of each category is the pad's
+default sound. Add, remove or rename files, push, and the plugin is rebuilt with them.
 
 ## Build on your computer
 ```
