@@ -1,0 +1,92 @@
+name: Build ERA for Windows (VST3 + app + installer)
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (64-bit, no extra runtime needed)
+        run: cmake -B build -A x64 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 4
+
+      - name: Stage files
+        shell: pwsh
+        run: |
+          $A = "build/ERA_artefacts/Release"
+          New-Item -ItemType Directory -Force stage/ERA/Standalone | Out-Null
+          Copy-Item -Recurse "$A/VST3/ERA.vst3" stage/ERA/
+          Copy-Item "$A/Standalone/ERA.exe" stage/ERA/Standalone/
+          Copy-Item installer/README.txt stage/ERA/
+          Get-ChildItem -Recurse stage | Select-Object FullName, Length
+
+      - name: Make the installer
+        shell: pwsh
+        run: |
+          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+            $n = "${env:ProgramFiles(x86)}\NSIS"
+            if (-not (Test-Path "$n\makensis.exe")) { choco install nsis -y --no-progress }
+            $env:PATH = "$n;$env:PATH"
+          }
+          Push-Location installer
+          makensis /V2 era.nsi
+          makensis /V2 /DNOADMIN "/DOUTFILE=..\ERA_v1.0_Setup_NoAdmin.exe" era.nsi
+          Pop-Location
+          Get-Item ERA_v1.0_Setup.exe | Select-Object Name, Length
+
+      - name: Test the installer (install, check, uninstall)
+        shell: pwsh
+        run: |
+          Start-Process -Wait -FilePath .\ERA_v1.0_Setup.exe -ArgumentList "/S"
+          $vst = "$env:CommonProgramFiles\VST3\ERA.vst3\Contents\x86_64-win\ERA.vst3"
+          $app = "$env:ProgramFiles\ERA\ERA.exe"
+          foreach ($f in @($vst, $app)) { if (-not (Test-Path $f)) { throw "Missing after install: $f" } ; Write-Host "OK $f" }
+          Start-Process -Wait -FilePath "$env:ProgramFiles\ERA\Uninstall ERA.exe" -ArgumentList "/S"
+          Start-Sleep 3
+          if (Test-Path $app) { throw "Uninstall left $app" }
+          Write-Host "Install and uninstall OK"
+
+      - name: Test the no-admin installer (as a normal user, no UAC)
+        shell: pwsh
+        run: |
+          $env:__COMPAT_LAYER = "RunAsInvoker"
+          Start-Process -Wait -FilePath .\ERA_v1.0_Setup_NoAdmin.exe -ArgumentList "/S"
+          $vst = "$env:LOCALAPPDATA\Programs\Common\VST3\ERA.vst3\Contents\x86_64-win\ERA.vst3"
+          $app = "$env:LOCALAPPDATA\Programs\ERA\ERA.exe"
+          foreach ($f in @($vst, $app)) { if (-not (Test-Path $f)) { throw "Missing after install: $f" } ; Write-Host "OK $f" }
+          $k = Get-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\ERA"
+          Write-Host "Registered:" $k.DisplayName
+          Start-Process -Wait -FilePath "$env:LOCALAPPDATA\Programs\ERA\Uninstall ERA.exe" -ArgumentList "/S"
+          Start-Sleep 3
+          if (Test-Path $app) { throw "Uninstall left $app" }
+          Write-Host "No-admin install and uninstall OK"
+
+      - name: Zip (no installer)
+        shell: pwsh
+        run: Compress-Archive -Path stage/ERA -DestinationPath ERA_v1.0_Windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ERA-v1.0-Windows
+          path: |
+            ERA_v1.0_Setup.exe
+            ERA_v1.0_Setup_NoAdmin.exe
+            ERA_v1.0_Windows.zip
+
+      - name: Publish to the v1.0 release
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v1.0 >/dev/null 2>&1 || gh release create v1.0 --title "ERA v1.0" --notes "ERA - Raboday Drums v1.0 by kimyondabeat. Windows: ERA_v1.0_Setup.exe. Mac: ERA_v1.0_Mac.pkg." || true
+          gh release upload v1.0 ERA_v1.0_Setup.exe ERA_v1.0_Setup_NoAdmin.exe ERA_v1.0_Windows.zip --clobber

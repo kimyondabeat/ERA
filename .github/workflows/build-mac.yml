@@ -1,0 +1,63 @@
+name: Build ERA for Mac (AU + VST3 + app)
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "Mac runner"
+        default: "macos-15-intel"
+
+permissions:
+  contents: write
+
+env:
+  # JUCE's helper tool (juceaide) is built without our deployment target; this keeps the new SDK happy
+  MACOSX_DEPLOYMENT_TARGET: "10.13"
+
+jobs:
+  mac:
+    runs-on: ${{ inputs.runner || 'macos-15-intel' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (Apple Silicon + Intel)
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 4
+
+      - name: Sign (ad-hoc)
+        run: |
+          A=build/ERA_artefacts/Release
+          codesign --force --deep --sign - "$A/AU/ERA.component"
+          codesign --force --deep --sign - "$A/VST3/ERA.vst3"
+          codesign --force --deep --sign - "$A/Standalone/ERA.app"
+
+      - name: Validate the Audio Unit
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R build/ERA_artefacts/Release/AU/ERA.component ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar || true
+          sleep 3
+          auval -v aumu Erar Kimy
+
+      - name: Make the installer (.pkg)
+        run: bash mac/make_pkg.sh build/ERA_artefacts/Release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ERA-v1.0-Mac
+          path: |
+            ERA_v1.0_Mac.pkg
+            build/ERA_artefacts/Release/AU/ERA.component
+            build/ERA_artefacts/Release/VST3/ERA.vst3
+
+      - name: Publish to the v1.0 release
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v1.0 >/dev/null 2>&1 || gh release create v1.0 --title "ERA v1.0" --notes "ERA - Raboday Drums v1.0 by kimyondabeat. Windows: ERA_v1.0_Setup.exe. Mac: ERA_v1.0_Mac.pkg." || true
+          gh release upload v1.0 ERA_v1.0_Mac.pkg --clobber
