@@ -99,7 +99,7 @@ void MixPage::paint (juce::Graphics& g)
     {
         const bool master = i == numPads;
         auto r = strip (i).toFloat();
-        g.setColour (master ? juce::Colour (0xff22261b) : panel2);
+        g.setColour (master ? bg.interpolatedWith (lime, 0.07f) : panel2);
         g.fillRoundedRectangle (r, 12.0f);
         g.setColour (master ? lime.withAlpha (0.4f) : juce::Colour (0xff262a34));
         g.drawRoundedRectangle (r.reduced (1.0f), 12.0f, 2.0f);

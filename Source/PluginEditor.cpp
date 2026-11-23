@@ -3,7 +3,9 @@
 using namespace Theme;
 
 // ===========================================================================
-EraLookAndFeel::EraLookAndFeel()
+EraLookAndFeel::EraLookAndFeel() { refreshColours(); }
+
+void EraLookAndFeel::refreshColours()
 {
     setColour (juce::PopupMenu::backgroundColourId, panel);
     setColour (juce::PopupMenu::textColourId, text);
@@ -50,7 +52,7 @@ void EraLookAndFeel::drawLinearSlider (juce::Graphics& g, int x, int y, int w, i
         g.fillRoundedRectangle (cap.translated (0.0f, 2.0f), 4.0f);
         g.setColour (master ? lime : off);
         g.fillRoundedRectangle (cap, 4.0f);
-        g.setColour (master ? juce::Colour (0xffe6ff9a) : juce::Colour (0xff555b68));
+        g.setColour (master ? lime.brighter (0.5f) : juce::Colour (0xff555b68));
         g.fillRect (cap.withHeight (2.0f));
         return;
     }
@@ -240,6 +242,7 @@ MainView::MainView (EraProcessor& p, std::function<void (float)> scaleFn)
     o.filenameSuffix = ".settings";
     o.osxLibrarySubFolder = "Application Support";
     settings = std::make_unique<juce::PropertiesFile> (o);
+    applyAccent (settings->getIntValue ("accent", 0));
     for (auto& f : juce::StringArray::fromLines (settings->getValue ("favourites")))
         if (f.isNotEmpty()) favourites.insert (f);
 
@@ -299,6 +302,16 @@ void MainView::stepSound (int direction)
     home.control.refresh();
     home.pads.repaint();
     repaint (lcdArea());
+}
+
+void MainView::repaintEverything()
+{
+    std::function<void (juce::Component&)> all = [&] (juce::Component& c)
+    {
+        c.repaint();
+        for (auto* child : c.getChildren()) all (*child);
+    };
+    all (*this);
 }
 
 void MainView::toggleFavourite (const juce::String& id)
@@ -368,13 +381,27 @@ void MainView::showSettings()
     const float current = (float) settings->getDoubleValue ("uiScale", 0.8);
     for (int pct : { 60, 70, 80, 90, 100, 110, 120 })
         sizes.addItem (pct, juce::String (pct) + " %", true, std::abs (current * 100.0f - (float) pct) < 1.0f);
+    juce::PopupMenu colours;
+    const int currentAccent = settings->getIntValue ("accent", 0);
+    for (int i = 0; i < numAccents; ++i)
+        colours.addItem (1000 + i, accents[i].name, true, i == currentAccent);
     m.addSectionHeader ("ERA v1.0  -  by kimyondabeat");
     m.addSubMenu ("Interface size", sizes);
+    m.addSubMenu ("Interface colour", colours);
     m.setLookAndFeel (&getLookAndFeel());
     m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (settingsButton),
                      [this] (int r)
                      {
                          if (r <= 0) return;
+                         if (r >= 1000)
+                         {
+                             settings->setValue ("accent", r - 1000);
+                             settings->saveIfNeeded();
+                             applyAccent (r - 1000);
+                             if (auto* l = dynamic_cast<EraLookAndFeel*> (&getLookAndFeel())) l->refreshColours();
+                             repaintEverything();
+                             return;
+                         }
                          settings->setValue ("uiScale", r / 100.0);
                          settings->saveIfNeeded();
                          setScale (r / 100.0f);
@@ -486,6 +513,7 @@ void MainView::resized()
 EraEditor::EraEditor (EraProcessor& p)
     : AudioProcessorEditor (&p), view (p, [this] (float s) { setScale (s); })
 {
+    lnf.refreshColours(); // the view loaded the saved colour
     setLookAndFeel (&lnf);
     addAndMakeVisible (view);
     setScale ((float) view.settings->getDoubleValue ("uiScale", 0.8));

@@ -492,7 +492,7 @@ void PadControl::paint (juce::Graphics& g)
 
     auto drawSlot = [&] (juce::Rectangle<float> r, const juce::String& tag, const SamplePtr& s, bool on)
     {
-        g.setColour (on ? juce::Colour (0xff22261b) : panel2);
+        g.setColour (on ? bg.interpolatedWith (lime, 0.07f) : panel2);
         g.fillRoundedRectangle (r, 9.0f);
         g.setColour (on ? lime : juce::Colour (0xff2c303a));
         g.drawRoundedRectangle (r.reduced (1.0f), 9.0f, 2.0f);

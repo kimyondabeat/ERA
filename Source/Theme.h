@@ -18,8 +18,24 @@ namespace Theme
     const juce::Colour dim      { 0xff9aa0ad };
     const juce::Colour faint    { 0xff7c8290 };
     const juce::Colour off      { 0xff3a3f4b };
-    const juce::Colour lime     { 0xffc8f04a };
-    const juce::Colour limeDark { 0xff8fae2c };
+    // The accent colour (Settings > Interface colour). Named "lime" after the default.
+    inline juce::Colour lime     { 0xffc8f04a };
+    inline juce::Colour limeDark { 0xff8fae2c };
+
+    struct Accent { const char* name; juce::uint32 main, dark; };
+    constexpr int numAccents = 4;
+    inline const Accent accents[numAccents] = {
+        { "Lime",   0xffc8f04a, 0xff8fae2c },
+        { "Orange", 0xffff8a3d, 0xffb85a1c },
+        { "Ice",    0xff5cd6ff, 0xff2f8fb3 },
+        { "Pink",   0xffff5fae, 0xffb83878 },
+    };
+    inline void applyAccent (int i)
+    {
+        const auto& a = accents[juce::jlimit (0, numAccents - 1, i)];
+        lime = juce::Colour (a.main);
+        limeDark = juce::Colour (a.dark);
+    }
     const juce::Colour amber    { 0xffffb347 };
     const juce::Colour red      { 0xffff5a4a };
 

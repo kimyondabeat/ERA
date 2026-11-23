@@ -11,6 +11,7 @@ class EraLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
     EraLookAndFeel();
+    void refreshColours();
     void drawRotarySlider (juce::Graphics&, int x, int y, int w, int h, float pos, float start, float end, juce::Slider&) override;
     void drawLinearSlider (juce::Graphics&, int x, int y, int w, int h, float pos, float min, float max,
                            juce::Slider::SliderStyle, juce::Slider&) override;
@@ -257,6 +258,7 @@ public:
     int getLibraryCategory() const { return libraryCategory; }
     void setLibraryCategory (int c);
     void showPage (int page);
+    void repaintEverything();
 
     bool isFavourite (const juce::String& id) const { return favourites.count (id) > 0; }
     void toggleFavourite (const juce::String& id);
