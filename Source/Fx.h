@@ -36,7 +36,8 @@ struct FxParams
 class FxChain
 {
 public:
-    static void addParameters (juce::AudioProcessorValueTreeState::ParameterLayout&, const juce::String& prefix, const juce::String& namePrefix);
+    // withSpace: a little delay and reverb on by default (the VOX pad)
+    static void addParameters (juce::AudioProcessorValueTreeState::ParameterLayout&, const juce::String& prefix, const juce::String& namePrefix, bool withSpace = false);
     static FxParams bind (juce::AudioProcessorValueTreeState&, const juce::String& prefix);
     static const juce::StringArray& ids();
 

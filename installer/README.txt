@@ -30,6 +30,7 @@ MIX
 - MASTER: Width, Limit (louder, never clips) and the master volume.
 
 FX
+- The VOX pad starts with a little delay and reverb.
 - Pick a pad (or MASTER), then use Delay (synced to your DAW tempo), Filter,
   Equalizer, Reverb, Compressor and Transient. Each module has ON / OFF.
 - RESET FX puts the selected pad's effects back to default.

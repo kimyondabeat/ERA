@@ -101,7 +101,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout EraProcessor::createLayout()
         f ("ldecay", "Layer Decay", { 0.0f, 1.0f, 0.01f }, 1.0f, [] (float v, int) { return v >= 0.995f ? String ("Full") : String (roundToInt (v * 100.0f)) + " %"; });
         f ("lvol", "Layer Volume", { 0.0f, 2.0f, 0.01f }, 1.0f, [] (float v, int) { return v <= 0.001f ? String ("-inf dB") : String (Decibels::gainToDecibels (v), 1) + " dB"; });
 
-        FxChain::addParameters (layout, fxPrefix (p), name);
+        FxChain::addParameters (layout, fxPrefix (p), name, p == 4); // VOX: a little delay + reverb
     }
     FxChain::addParameters (layout, fxPrefix (masterChain), "Master ");
 

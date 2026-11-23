@@ -72,8 +72,12 @@ int main()
         save (b, juce::String ("pad_") + padInfo[(size_t) pad].name);
     }
 
+    CHECK (p.apvts.getRawParameterValue ("p5_dlyOn")->load() > 0.5f && p.apvts.getRawParameterValue ("p5_revOn")->load() > 0.5f, "vox delay/reverb not on");
+    CHECK (p.apvts.getRawParameterValue ("p1_dlyOn")->load() < 0.5f, "kick delay should be off");
+
     // 2. silence when nothing plays
     {
+        render (p, -1, 12.0); // let the vox echoes die out
         auto b = render (p, -1, 0.5);
         CHECK (b.getMagnitude (0, b.getNumSamples()) < 1.0e-4f, "not silent");
     }

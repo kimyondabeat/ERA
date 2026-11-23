@@ -47,7 +47,7 @@ const juce::StringArray& FxChain::ids()
 }
 
 void FxChain::addParameters (juce::AudioProcessorValueTreeState::ParameterLayout& layout,
-                             const juce::String& prefix, const juce::String& n)
+                             const juce::String& prefix, const juce::String& n, bool withSpace)
 {
     using namespace juce;
     auto pct = [] (float v, int) { return String (roundToInt (v * 100.0f)) + " %"; };
@@ -58,19 +58,19 @@ void FxChain::addParameters (juce::AudioProcessorValueTreeState::ParameterLayout
         if (text) a = a.withStringFromValueFunction (text);
         layout.add (std::make_unique<AudioParameterFloat> (ParameterID { prefix + id, 1 }, n + name, range, def, a));
     };
-    auto b = [&] (const char* id, const String& name)
+    auto b = [&] (const char* id, const String& name, bool def = false)
     {
-        layout.add (std::make_unique<AudioParameterBool> (ParameterID { prefix + id, 1 }, n + name, false));
+        layout.add (std::make_unique<AudioParameterBool> (ParameterID { prefix + id, 1 }, n + name, def));
     };
     auto c = [&] (const char* id, const String& name, StringArray choices, int def)
     {
         layout.add (std::make_unique<AudioParameterChoice> (ParameterID { prefix + id, 1 }, n + name, choices, def));
     };
 
-    b ("dlyOn", "Delay On");
+    b ("dlyOn", "Delay On", withSpace);
     c ("dlySync", "Delay Time", { "1/4", "1/8", "1/8D", "1/16" }, 2);
-    f ("dlyFb", "Delay Feedback", { 0.0f, 0.9f, 0.01f }, 0.35f, pct);
-    f ("dlyMix", "Delay Mix", { 0.0f, 1.0f, 0.01f }, 0.3f, pct);
+    f ("dlyFb", "Delay Feedback", { 0.0f, 0.9f, 0.01f }, withSpace ? 0.25f : 0.35f, pct);
+    f ("dlyMix", "Delay Mix", { 0.0f, 1.0f, 0.01f }, withSpace ? 0.16f : 0.3f, pct);
 
     b ("fltOn", "Filter On");
     c ("fltType", "Filter Type", { "LP", "HP", "BP" }, 0);
@@ -83,11 +83,11 @@ void FxChain::addParameters (juce::AudioProcessorValueTreeState::ParameterLayout
     f ("eqMid", "EQ Mid", { -12.0f, 12.0f, 0.1f }, 0.0f, nullptr, "dB");
     f ("eqHigh", "EQ High", { -12.0f, 12.0f, 0.1f }, 0.0f, nullptr, "dB");
 
-    b ("revOn", "Reverb On");
+    b ("revOn", "Reverb On", withSpace);
     f ("revSize", "Reverb Size", { 0.0f, 1.0f, 0.01f }, 0.5f, pct);
-    f ("revDecay", "Reverb Decay", { 0.0f, 1.0f, 0.01f }, 0.5f, pct);
-    f ("revTone", "Reverb Tone", { 0.0f, 1.0f, 0.01f }, 0.5f, pct);
-    f ("revMix", "Reverb Mix", { 0.0f, 1.0f, 0.01f }, 0.25f, pct);
+    f ("revDecay", "Reverb Decay", { 0.0f, 1.0f, 0.01f }, withSpace ? 0.42f : 0.5f, pct);
+    f ("revTone", "Reverb Tone", { 0.0f, 1.0f, 0.01f }, withSpace ? 0.6f : 0.5f, pct);
+    f ("revMix", "Reverb Mix", { 0.0f, 1.0f, 0.01f }, withSpace ? 0.2f : 0.25f, pct);
 
     b ("cmpOn", "Comp On");
     f ("cmpThr", "Comp Threshold", { -40.0f, 0.0f, 0.1f }, -12.0f, nullptr, "dB");
